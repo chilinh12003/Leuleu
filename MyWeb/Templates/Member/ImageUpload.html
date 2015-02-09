@@ -1,0 +1,230 @@
+﻿<script src="{DNS}/Scripts/jQuery.FileUpload/vendor/jquery.ui.widget.js"></script>
+<script src="{DNS}/Scripts/jQuery.FileUpload/jquery.iframe-transport.js"></script>
+<script src="{DNS}/Scripts/jQuery.FileUpload/jquery.fileupload.js"></script>
+
+<script>
+    $('#tbxFile').fileupload({
+        url: '{DNS}/MyAjax.AjaxMember.MyAjaxMember.Upload.ajax',
+        add: function (e, data)
+        {
+            data.submit();
+        },
+        progress: function (e, data)
+        {
+            var progress = parseInt(data.loaded / data.total * 100, 10);
+            $('#bar').css('width', progress + '%');
+        },
+        success: function (response, status)
+        {
+            var arr_JSON = $.parseJSON(response);
+
+            $.each(arr_JSON, function ()
+            {
+                //nếu như biến là kết quả trả về
+                if (this.Parameter == "Result")
+                {
+                    //nếu kiểu trả về là success
+                    if (this.CurrentTypeResult == "1")
+                    {
+                        $("#imgFile").attr("src", Domain + this.Value)
+                        $("#imgFile").show();
+                        $("#imgFile").click(function ()
+                        {
+                            window.open($("#imgFile").attr("src"));
+                        });
+                    }
+                    else
+                    {
+
+                    }
+                }
+            });
+            //$('#bar').css('width', '0%');
+        },
+        error: function (error)
+        {
+            //$('#bar').css('width', '0%');
+        }
+    });
+
+    $("#btnPost").click(function ()
+    {
+        var ImageLink = $("#imgFile").attr("src");
+        if ($("#a-link").hasClass("active"))
+        {
+            ImageLink = $("#imgLink").attr("src");
+        }
+
+        if (ImageLink === "")
+        {
+            RemoveWarning("w-imgfile");
+            AddWarning($("#bar"), "w-imgfile", "Xin vui lòng chọn file ảnh cần tải lên hoặc chèn link.");
+            return;
+        }
+        else
+        {
+            RemoveWarning("w-imgfile");
+        }
+
+        if ($("#tbxTitle").val() === "")
+        {
+            RemoveWarning("w-title");
+            AddWarning($("#tbxTitle"), "w-title", "Xin vui lòng nhập tiêu đề cho ảnh.");
+            return;
+        }
+        else
+        {
+            RemoveWarning("w-title");
+
+        }
+        if ($("#tbxTitle").val().lenght > 120)
+        {
+            RemoveWarning("w-title-lenght");
+            AddWarning($("#tbxTitle"), "w-title-lenght", "Tiêu đề quá dài so với quy định, xin vui lòng nhập dưới 120 ký tự.");
+            return;
+        }
+        else
+        {
+            RemoveWarning("w-title-lenght");
+
+        }
+
+        var cateID = 1;
+
+        if ($("#chkSad").is(':checked'))
+        {
+            cateID = 2;
+        }
+        if ($("#chkFun").is(':checked') && $("#chkSad").is(':checked'))
+        {
+            cateID = 3;
+        }
+
+
+        var url = Domain + "/MyAjax.AjaxMember.MyAjaxMember.PostNews.ajax";
+        $.ajax({
+            type: "POST", //Phương thức gửi request là POST hoặc GET
+            data: "CateID="+cateID+"&Image=" + ImageLink + "&Title=" + $("#tbxTitle").val() + "&ResourceLink=" + $("#tbxSource").val(),
+            url: url, //Đường dẫn tới nơi xử lý request ajax
+            success: function (string)
+            {
+                var arr_JSON = $.parseJSON(string);
+
+                $.each(arr_JSON, function ()
+                {
+                    //nếu như biến là kết quả trả về
+                    if (this.Parameter == "Result")
+                    {
+                        //nếu kiểu trả về là success
+                        if (this.CurrentTypeResult == "1")
+                        {
+                            location.href = this.Value;
+                        }
+                        else
+                        {
+                            alert(this.Description);
+                        }
+                    }
+                });
+            }
+        });
+
+    });
+
+    function AddWarning(ctrThis, idWarn, strMessage)
+    {
+        $(ctrThis).after('<div class="warning" id="' + idWarn + '">' + strMessage + '</div>');
+    }
+    function RemoveWarning(idWarn)
+    {
+        $("#" + idWarn).remove();
+    }
+
+    $("#a-file").click(function ()
+    {
+        $("#a-file").addClass("active");
+        $("#a-link").removeClass("active");
+        $(".input-link").css({ "display": "none" });
+        $(".input-file").css({ "display": "block" });
+    });
+
+    $("#a-link").click(function ()
+    {
+        $("#a-link").addClass("active");
+        $("#a-file").removeClass("active");
+        $(".input-file").css({ "display": "none" });
+        $(".input-link").css({ "display": "block" });
+    });
+    $("#tbxLink").focusout(function ()
+    {
+        $("#imgLink").attr("src", $("#tbxLink").val());
+        $("#imgLink").click(function ()
+        {
+            window.open($("#imgLink").attr("src"));
+        });
+
+        $("#imgLink").show();
+    });
+</script>
+<form method="post" action="{DNS}/MyAjax.LoginAjax.MyAjaxMember.Upload.ajax" id="frmUpload">
+    <div class="up-image">
+        <header>
+            Upload
+        </header>
+        <div class="note">
+            Tải những hình ảnh vui nhộn với định dạng GIF/JPG/PNG (Kích thước cho phép dưới: 3MB)
+        </div>
+        <div class="tab">
+            <a class="active" href="javascript:void(0);" id="a-file"><span class="icon-up"></span>Up ảnh</a>
+            <a href="javascript:void(0);" id="a-link"><span class="icon-link"></span>Chèn link</a>
+        </div>
+        <div class="input-file">
+            <input type="file" id="tbxFile" />
+            <img src="" id="imgFile" />
+        </div>
+        <div class="input-link" style="display:none;">
+            <input type="text" value="" id="tbxLink" placeholder="http://" />
+            <img src="" id="imgLink" />
+        </div>
+        <div class="bar" id="bar"></div>
+        <div class="title">
+            Thể loại
+        </div>
+        <div class="input-check">
+            <div class="check-item">
+                <div class="checkbox">
+                    <input type="checkbox" value="1" id="chkFun" name="check" checked="checked">
+                    <label for="chkFun"></label>
+                </div>
+                <label class="check-name" for="chkFun">
+                    Vui
+                </label>
+            </div>
+            <div class="check-item">
+                <div class="checkbox">
+                    <input type="checkbox" value="2" id="chkSad" name="check">
+                    <label for="chkSad"></label>
+                </div>
+                <label class="check-name" for="chkSad">
+                    Buồn
+                </label>
+            </div>
+        </div>
+        <div class="title">
+            Tiêu đề ảnh
+            <span class="inline">120 ký tự</span>
+        </div>
+        <div class="input-title">
+            <textarea id="tbxTitle" maxlength="120"></textarea>
+        </div>
+        <div class="title">
+            Nguồn
+        </div>
+        <div class="input-title">
+            <input type="text" value="" id="tbxSource" placeholder="Nhập nguồn gốc file ảnh để tôn trọng quyền tác giả" />
+        </div>
+        <div class="button">
+            <a class="blue-button" id="btnPost" href="javascript:void(0);">Đăng bài</a>
+        </div>
+    </div>
+</form>
